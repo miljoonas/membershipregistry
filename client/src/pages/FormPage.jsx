@@ -1,21 +1,13 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import './App.css'
+import '../App.css'
+import Navbar from '../components/Navbar'
 
-function App() {
+function FormPage() {
   // const [count, setCount] = useState(0)
   const [users, setUsers] = useState([])
   const [name, setName] = useState('')
   const [state, setState] = useState('')
-
-  const fetchUsers = async () => {
-    try {
-      const response = await axios.get("http://localhost:8080/user/")
-      setUsers(response.data)
-    } catch (error) {
-      console.error(error)
-    }
-  }
 
   // Post new user to the backend
   const addUser = async (event) => {
@@ -28,19 +20,18 @@ function App() {
 
     try {
       await axios.post("http://localhost:8080/user/", newUser)
-      fetchUsers()
+      setName('')
+      setState('')
+      alert('New user added');
     } catch (error) {
       console.error(error)
     }
   }
 
-  useEffect(() => {
-    fetchUsers()
-  }, [])
-
   return (
     <div>
-      <h2>Users List</h2>
+      <Navbar></Navbar>
+      
       <form onSubmit={addUser}>
         <input
           type="text"
@@ -58,16 +49,8 @@ function App() {
         />
         <button type="submit">Add User</button>
       </form>
-
-      <div>
-        {users.map((user, index) => (
-          <div key={user.id}>
-            <span>{user.name} - {user.state}</span>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }
 
-export default App
+export default FormPage

@@ -80,10 +80,12 @@ def update_user(id):
 @app.route('/user/<id>', methods=['DELETE'])
 def delete_user(id):
   user = User.query.get(id)
-  db.session.delete(user)
+  if not user:
+        return jsonify({"error": "User not found"}), 404
 
+  db.session.delete(user)
   db.session.commit()
-  return jsonify(user)
+  return jsonify({"message": "User deleted successfully"})
 
 if __name__ == "__main__":
   app.run(debug=True, port=8080)
