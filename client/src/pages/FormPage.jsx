@@ -1,28 +1,35 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import axios from 'axios'
 import '../App.css'
 import Navbar from '../components/Navbar'
 
 function FormPage() {
-  // const [count, setCount] = useState(0)
-  const [users, setUsers] = useState([])
   const [name, setName] = useState('')
-  const [state, setState] = useState('')
+  const [email, setEmail] = useState('')
+  const [city, setCity] = useState('')
+  const [isOldMember, setIsOldMember] = useState(false)
+  const [hasPaid, setHasPaid] = useState(false)
 
-  // Post new user to the backend
   const addUser = async (event) => {
     event.preventDefault()
-
+  
     const newUser = {
       name: name,
-      state: state
+      email: email,
+      city: city,
+      is_old_member: isOldMember,
+      has_paid: hasPaid,
+      date_of_registration: new Date().toISOString()  // Send current time in ISO format
     }
-
+  
     try {
       await axios.post("http://localhost:8080/user/", newUser)
       setName('')
-      setState('')
-      alert('New user added');
+      setEmail('')
+      setCity('')
+      setIsOldMember(false)
+      setHasPaid(false)
+      alert('New user added')
     } catch (error) {
       console.error(error)
     }
@@ -30,7 +37,7 @@ function FormPage() {
 
   return (
     <div>
-      <Navbar></Navbar>
+      <Navbar />
       
       <form onSubmit={addUser}>
         <input
@@ -41,12 +48,27 @@ function FormPage() {
           required
         />
         <input
-          type="text"
-          placeholder="State"
-          value={state}
-          onChange={(e) => setState(e.target.value)}
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
+        <input
+          type="text"
+          placeholder="City"
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          required
+        />
+        <label>
+          Old Member:
+          <input
+            type="checkbox"
+            checked={isOldMember}
+            onChange={(e) => setIsOldMember(e.target.checked)}
+          />
+        </label>
         <button type="submit">Add User</button>
       </form>
     </div>

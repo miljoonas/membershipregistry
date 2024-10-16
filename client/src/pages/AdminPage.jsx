@@ -17,7 +17,6 @@ function AdminPage() {
   const deleteUser = async (userId) => {
     try {
       await axios.delete(`http://localhost:8080/user/${userId}`)
-      // After successful deletion, fetch the updated user list
       fetchUsers()
     } catch (error) {
       console.error(error)
@@ -25,24 +24,42 @@ function AdminPage() {
     }
   }
 
+  const toggleHasPaid = async (user) => {
+    try {
+      const updatedUser = { ...user, has_paid: !user.has_paid }
+      await axios.put(`http://localhost:8080/user/${user.id}`, updatedUser)
+      fetchUsers()  // Refresh the list after toggling
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   useEffect(() => {
     fetchUsers()
   }, [])
 
-
   return (
     <div>
-      <Navbar></Navbar>
+      <Navbar />
       <h2>Users List</h2>
       <div>
         {users.map((user) => (
-          <div key={user.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-            <span>{user.name} - {user.state}</span>
+          <div key={user.id} style={{ display: 'flex', flexDirection: 'column', marginBottom: '10px', border: '1px solid #ccc', padding: '10px' }}>
+            <span><strong>Name:</strong> {user.name}</span>
+            <span><strong>Email:</strong> {user.email}</span>
+            <span><strong>City:</strong> {user.city}</span>
+            <span><strong>Old Member:</strong> {user.is_old_member ? "Yes" : "No"}</span>
+            <span><strong>Membership Paid:</strong> {user.has_paid ? "Yes" : "No"}</span>
+            <span><strong>Date of Registration:</strong> {new Date(user.date_of_registration).toLocaleString()}</span>
             <button
               onClick={() => deleteUser(user.id)}
-              style={{ marginLeft: '10px', backgroundColor: 'red', color: 'white', border: 'none', cursor: 'pointer', padding: '1px 3px' }}>
-              X
+              style={{ marginTop: '10px', backgroundColor: 'red', color: 'white', border: 'none', cursor: 'pointer', padding: '5px 10px' }}>
+              Delete
+            </button>
+            <button
+              onClick={() => toggleHasPaid(user)}
+              style={{ marginTop: '10px', backgroundColor: user.has_paid ? 'green' : 'gray', color: 'white', border: 'none', cursor: 'pointer', padding: '5px 10px' }}>
+              {user.has_paid ? 'Mark as Unpaid' : 'Mark as Paid'}
             </button>
           </div>
         ))}
