@@ -1,44 +1,45 @@
-import { useState } from 'react'
-import axios from 'axios'
-import '../App.css'
-import Navbar from '../components/Navbar'
+import { useState } from 'react';
+import axios from 'axios';
+import '../App.css';
+import Navbar from '../components/Navbar';
 
 function FormPage() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [city, setCity] = useState('')
-  const [isOldMember, setIsOldMember] = useState(false)
-  const [hasPaid, setHasPaid] = useState(false)
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [city, setCity] = useState('');
+  const [isOldMember, setIsOldMember] = useState(false);
+  const [hasPaid, setHasPaid] = useState(false);
 
   const addUser = async (event) => {
-    event.preventDefault()
-  
+    event.preventDefault();
+
     const newUser = {
       name: name,
       email: email,
       city: city,
       is_old_member: isOldMember,
       has_paid: hasPaid,
-      date_of_registration: new Date().toISOString()  // Send current time in ISO format
-    }
-  
+      date_of_registration: new Date().toISOString(),  // Send current time in ISO format
+    };
+
     try {
-      await axios.post("http://localhost:8080/user/", newUser)
-      setName('')
-      setEmail('')
-      setCity('')
-      setIsOldMember(false)
-      setHasPaid(false)
-      alert('New user added')
+      await axios.post("http://localhost:8080/user/", newUser);
+      setName('');
+      setEmail('');
+      setCity('');
+      setIsOldMember(false);
+      setHasPaid(false);
+      alert('New user added');
     } catch (error) {
-      console.error(error)
+      console.error("Error adding new user:", error);
+      alert("Failed to add user. Please try again.");
     }
-  }
+  };
 
   return (
     <div>
       <Navbar />
-      
+      <h2>Add New User</h2>
       <form onSubmit={addUser}>
         <input
           type="text"
@@ -69,10 +70,18 @@ function FormPage() {
             onChange={(e) => setIsOldMember(e.target.checked)}
           />
         </label>
+        <label>
+          Membership Paid:
+          <input
+            type="checkbox"
+            checked={hasPaid}
+            onChange={(e) => setHasPaid(e.target.checked)}
+          />
+        </label>
         <button type="submit">Add User</button>
       </form>
     </div>
-  )
+  );
 }
 
-export default FormPage
+export default FormPage;

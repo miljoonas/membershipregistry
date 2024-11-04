@@ -8,7 +8,7 @@ function Navbar() {
       </div>
       <ul className='navbar-menu'>
         <li><NavLink to="/">Home</NavLink></li>
-        <li><NavLink to="/admin">Admin</NavLink></li>
+        <li><NavLink to="/login">Admin</NavLink></li>
       </ul>
     </div>
   )

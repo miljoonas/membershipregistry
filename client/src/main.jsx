@@ -1,25 +1,43 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import FormPage from './pages/FormPage.jsx'
-import './index.css'
+// src/main.jsx
+import { StrictMode, useState } from 'react';
+import { createRoot } from 'react-dom/client';
 import {
   createBrowserRouter,
   RouterProvider,
   Route,
-} from 'react-router-dom'
-import AdminPage from './pages/AdminPage.jsx'
+  Navigate,
+} from 'react-router-dom';
+import FormPage from './pages/FormPage';
+import AdminPage from './pages/AdminPage';
+import LoginPage from './pages/LoginPage';
+import './index.css';
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <FormPage />
-  },
-  {
-    path: "/admin",
-    element: <AdminPage />
-  },
-])
+function MainApp() {
+  const [token, setToken] = useState(localStorage.getItem('token'));
 
-createRoot(document.getElementById('root')).render(
-  <RouterProvider router={router} />
-)
+  // Protect the AdminPage by checking if the token exists
+  const ProtectedRoute = ({ children }) => {
+    return token ? children : <Navigate to="/login" />;
+  };
+
+  return (
+    <StrictMode>
+      <RouterProvider
+        router={createBrowserRouter([
+          { path: "/", element: <FormPage /> },
+          { path: "/login", element: <LoginPage setToken={setToken} /> },
+          {
+            path: "/admin",
+            element: (
+              <ProtectedRoute>
+                <AdminPage />
+              </ProtectedRoute>
+            ),
+          },
+        ])}
+      />
+    </StrictMode>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<MainApp />);

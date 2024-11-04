@@ -1,113 +1,146 @@
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_cors import CORS
 import os
 
-# from sqlalchemy import create_engine
-
 app = Flask(__name__)
-cors = CORS(app, origins='*') # requires fine tuning
+
+# Configure CORS with specific methods and headers
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], supports_credentials=True)
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-# Database
+# Database setup
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'db.sqlite')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+app.config['JWT_SECRET_KEY'] = 'your_secret_key'
 
 db = SQLAlchemy(app)
-
 ma = Marshmallow(app)
+jwt = JWTManager(app)
 
-### TODO: Create db creation to make app portable
-# engine=create_engine('sqlite:///' + os.path.join(basedir, 'db.sqlite'))
-# db.Model.metadata.create_all(engine.url) # Probably needs to check if db exists(?)
-
-
+# User model
 class User(db.Model):
-  id = db.Column(db.Integer, primary_key=True)
-  name = db.Column(db.String(100), unique=True) # sama nimi voi olla ongelma(?)
-  email = db.Column(db.String(100), unique=True)
-  city = db.Column(db.String(50))
-  is_old_member = db.Column(db.Boolean, default=False)
-  has_paid = db.Column(db.Boolean, default=False)
-  date_of_registration = db.Column(db.String(50)) # TODO: convert to db.Datetime? for now the date is in ISO string format.
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True)
+    email = db.Column(db.String(100), unique=True)
+    password = db.Column(db.String(100), nullable=True)  # Password can be null
+    city = db.Column(db.String(50))
+    is_old_member = db.Column(db.Boolean, default=False)
+    has_paid = db.Column(db.Boolean, default=False)
+    date_of_registration = db.Column(db.String(50))
 
-  def __init__(self, name, email, city, is_old_member, has_paid, date_of_registration):
-    self.name = name
-    self.email = email
-    self.city = city
-    self.is_old_member = is_old_member
-    self.has_paid = has_paid
-    self.date_of_registration = date_of_registration
+    def __init__(self, name, email, city, is_old_member=False, has_paid=False, date_of_registration=None, password=None):
+        self.name = name
+        self.email = email
+        self.password = password
+        self.city = city
+        self.is_old_member = is_old_member
+        self.has_paid = has_paid
+        self.date_of_registration = date_of_registration
 
 # User Schema
 class UserSchema(ma.Schema):
-  class Meta:
-    fields = ('id', 'name', 'email', 'city', 'is_old_member', 'has_paid', 'date_of_registration')
+    class Meta:
+        fields = ('id', 'name', 'email', 'city', 'is_old_member', 'has_paid', 'date_of_registration')
 
-# Init Schema
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 
+# Create a new user
 @app.route('/user/', methods=['POST'])
 def add_user():
-  name = request.json['name']
-  email = request.json['email']
-  city = request.json['city']
-  is_old_member = request.json.get('is_old_member', False)
-  has_paid = request.json.get('has_paid', False)
-  date_of_registration = request.json['date_of_registration'] # TODO: Timezone accuract needed
+    data = request.json
+    new_user = User(
+        name=data['name'],
+        email=data['email'],
+        city=data['city'],
+        is_old_member=data.get('is_old_member', False),
+        has_paid=data.get('has_paid', False),
+        date_of_registration=data['date_of_registration']
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"msg": "User created successfully"}), 201
 
-  new_user = User(name, email, city, is_old_member, has_paid, date_of_registration)
-  db.session.add(new_user)
-  db.session.commit()
+# Login route for authentication
+@app.route('/login', methods=['POST'])
+def login():
+    email = request.json.get('email')
+    password = request.json.get('password')
+    user = User.query.filter_by(email=email).first()
+    # Only allow login if user has a password
+    if user and user.password and user.password == password:
+        access_token = create_access_token(identity=user.id)
+        return jsonify(access_token=access_token)
+    return jsonify({"msg": "Bad email or password"}), 401
 
-  return user_schema.jsonify(new_user)
-
+# Get all users (protected route)
 @app.route('/user/', methods=['GET'])
+@jwt_required()
 def get_users():
-  all_users = User.query.all()
-  result = users_schema.dump(all_users)
-  return jsonify(result)
+    current_user_id = get_jwt_identity()
+    all_users = User.query.all()
+    result = users_schema.dump(all_users)
+    return jsonify(result)
 
-@app.route('/user/<id>', methods=['GET'])
-def get_user(id):
-  user = User.query.get(id)
-  return user_schema.jsonify(user)
-
-@app.route('/user/<id>', methods=['PUT'])
+# Update a user by ID (protected route)
+@app.route('/user/<int:id>', methods=['PUT'])
+@jwt_required()
 def update_user(id):
-  # TODO: User not found
+    user = User.query.get(id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
 
-  # TODO: improvement: use data = request.json to shorten the code
+    data = request.json
+    user.name = data.get("name", user.name)
+    user.email = data.get("email", user.email)
+    user.city = data.get("city", user.city)
+    user.is_old_member = data.get("is_old_member", user.is_old_member)
+    user.has_paid = data.get("has_paid", user.has_paid)
 
-  user = User.query.get(id)
-  name = request.json['name']
-  email = request.json['email']
-  city = request.json['city']
-  is_old_member = request.json.get('is_old_member', user.is_old_member)
-  has_paid = request.json.get('has_paid', user.has_paid)
+    db.session.commit()
+    return user_schema.jsonify(user), 200
 
-  user.name = name
-  user.email = email
-  user.city = city
-  user.is_old_member = is_old_member
-  user.has_paid = has_paid
-
-  db.session.commit()
-
-  return user_schema.jsonify(user)
-
-@app.route('/user/<id>', methods=['DELETE'])
+# Delete a user by ID (protected route)
+@app.route('/user/<int:id>', methods=['DELETE'])
+@jwt_required()
 def delete_user(id):
-  user = User.query.get(id)
-  if not user:
-    return jsonify({"error": "User not found"}), 404
+    user = User.query.get(id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
 
-  db.session.delete(user)
-  db.session.commit()
-  return jsonify({"message": "User deleted successfully"})
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"message": "User deleted successfully"})
+
+# Function to create an initial admin account if it doesn't exist
+def create_admin_account():
+    admin_email = "admin@example.com"
+    existing_admin = User.query.filter_by(email=admin_email).first()
+    if not existing_admin:
+        admin_user = User(
+            name="Admin",
+            email=admin_email,
+            password="securepassword",  # Only admin has a password
+            city="Headquarters",
+            is_old_member=True,
+            has_paid=True,
+            date_of_registration="2024-01-01T00:00:00Z"
+        )
+        db.session.add(admin_user)
+        db.session.commit()
+        print("Admin account created.")
+    else:
+        print("Admin account already exists.")
+
+
+# Run the admin creation function at startup
+with app.app_context():
+    db.create_all()
+    create_admin_account()
 
 if __name__ == "__main__":
-  app.run(debug=True, port=8080)
+    app.run(debug=True, port=8080)
