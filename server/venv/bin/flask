@@ -1,4 +1,4 @@
-#!/home/joonas/membershipRegistry/server/venv/bin/python
+#!/home/nuuskis/villen_projektit/membershipregistry/server/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

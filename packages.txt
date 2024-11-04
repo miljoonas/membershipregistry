@@ -13,7 +13,7 @@ sudo apt install python3.8-venv
 python -m venv venv
 source venv/bin/activate
 
-pip install Flask Flask-CORS flask-sqlalchemy flask-marshmallow marshmallow-sqlalchemy
+pip install Flask Flask-SQLAlchemy Flask-Marshmallow Flask-JWT-Extended Flask-CORS
 
 --- for migrations ---
 pip install Flask-Migrate
