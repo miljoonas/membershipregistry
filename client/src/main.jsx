@@ -1,13 +1,15 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import FormPage from './pages/FormPage.jsx'
 import './index.css'
 import {
   createBrowserRouter,
   RouterProvider,
   Route,
 } from 'react-router-dom'
+
+import FormPage from './pages/FormPage.jsx'
 import AdminPage from './pages/AdminPage.jsx'
+import LoginPage from './pages/LoginPage.jsx'
 
 const router = createBrowserRouter([
   {
@@ -17,6 +19,10 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: <AdminPage />
+  },
+  {
+    path: "/login",
+    element: <LoginPage />
   },
 ])
 

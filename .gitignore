@@ -2,3 +2,4 @@ __pycache__
 server/venv/
 server/venv*
 client/node_modules/
+package*
