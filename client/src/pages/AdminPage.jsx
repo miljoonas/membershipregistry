@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar'
 
 function AdminPage() {
   const [users, setUsers] = useState([])
+  const [searchQuery, setSearchQuery] = useState(''); // State for search query
 
   const fetchUsers = async () => {
     try {
@@ -38,12 +39,29 @@ function AdminPage() {
     fetchUsers()
   }, [])
 
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div>
       <Navbar />
       <h2>Users List</h2>
+      
+      {/* Search Bar */}
+      <div style={{ marginBottom: '20px' }}>
+        <input
+          type="text"
+          placeholder="Search by name or email..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ padding: '10px', width: '100%', border: '1px solid #ccc', borderRadius: '5px' }}
+        />
+      </div>
+      
       <div>
-        {users.map((user) => (
+        {filteredUsers.map((user) => (
           <div key={user.id} style={{ display: 'flex', flexDirection: 'column', marginBottom: '10px', border: '1px solid #ccc', padding: '10px' }}>
             <span><strong>Name:</strong> {user.name}</span>
             <span><strong>Email:</strong> {user.email}</span>
@@ -65,7 +83,8 @@ function AdminPage() {
         ))}
       </div>
     </div>
-  )
+  );
 }
+
 
 export default AdminPage
