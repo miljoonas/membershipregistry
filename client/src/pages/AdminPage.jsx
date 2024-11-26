@@ -110,28 +110,44 @@ function AdminPage() {
         </div>
       </div>
       
-      <div>
-        {filteredUsers.map((user) => (
-          <div key={user.id} style={{ display: 'flex', flexDirection: 'column', marginBottom: '10px', border: '1px solid #ccc', padding: '10px' }}>
-            <span><strong>Name:</strong> {user.name}</span>
-            <span><strong>Email:</strong> {user.email}</span>
-            <span><strong>City:</strong> {user.city}</span>
-            <span><strong>Old Member:</strong> {user.is_old_member ? "Yes" : "No"}</span>
-            <span><strong>Membership Paid:</strong> {user.has_paid ? "Yes" : "No"}</span>
-            <span><strong>Date of Registration:</strong> {new Date(user.date_of_registration).toLocaleString()}</span>
-            <button
-              onClick={() => deleteUser(user.id)}
-              style={{ marginTop: '10px', backgroundColor: 'red', color: 'white', border: 'none', cursor: 'pointer', padding: '5px 10px' }}>
-              Delete
-            </button>
-            <button
-              onClick={() => toggleHasPaid(user)}
-              style={{ marginTop: '10px', backgroundColor: user.has_paid ? 'green' : 'gray', color: 'white', border: 'none', cursor: 'pointer', padding: '5px 10px' }}>
-              {user.has_paid ? 'Mark as Unpaid' : 'Mark as Paid'}
-            </button>
-          </div>
-        ))}
-      </div>
+      {/* Users Table */}
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#333', color: '#fff' }}>
+            <th style={{ padding: '10px', border: '1px solid #ccc' }}>Name</th>
+            <th style={{ padding: '10px', border: '1px solid #ccc' }}>Email</th>
+            <th style={{ padding: '10px', border: '1px solid #ccc' }}>City</th>
+            <th style={{ padding: '10px', border: '1px solid #ccc' }}>Old Member</th>
+            <th style={{ padding: '10px', border: '1px solid #ccc' }}>Membership Paid</th>
+            <th style={{ padding: '10px', border: '1px solid #ccc' }}>Date of Registration</th>
+            <th style={{ padding: '10px', border: '1px solid #ccc' }}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredUsers.map((user) => (
+            <tr key={user.id} style={{ borderBottom: '1px solid #ccc' }}>
+              <td style={{ padding: '10px', border: '1px solid #ccc' }}>{user.name}</td>
+              <td style={{ padding: '10px', border: '1px solid #ccc' }}>{user.email}</td>
+              <td style={{ padding: '10px', border: '1px solid #ccc' }}>{user.city}</td>
+              <td style={{ padding: '10px', border: '1px solid #ccc' }}>{user.is_old_member ? "Yes" : "No"}</td>
+              <td style={{ padding: '10px', border: '1px solid #ccc' }}>{user.has_paid ? "Yes" : "No"}</td>
+              <td style={{ padding: '10px', border: '1px solid #ccc' }}>{new Date(user.date_of_registration).toLocaleString()}</td>
+              <td style={{ padding: '10px', border: '1px solid #ccc' }}>
+                <button
+                  onClick={() => deleteUser(user.id)}
+                  style={{ marginRight: '10px', backgroundColor: 'red', color: 'white', border: 'none', cursor: 'pointer', padding: '5px 10px' }}>
+                  Delete
+                </button>
+                <button
+                  onClick={() => toggleHasPaid(user)}
+                  style={{ backgroundColor: user.has_paid ? 'green' : 'gray', color: 'white', border: 'none', cursor: 'pointer', padding: '5px 10px' }}>
+                  {user.has_paid ? 'Mark as Unpaid' : 'Mark as Paid'}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
