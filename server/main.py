@@ -74,6 +74,25 @@ def add_user():
   has_paid = request.json.get('has_paid', False)
   date_of_registration = request.json['date_of_registration']
 
+  existing_user = User.query.filter_by(email=email).first()
+  if existing_user:
+      # If "old member" is checked, update the existing user
+      if is_old_member:
+          existing_user.name = name
+          existing_user.email = email
+          existing_user.city = city
+          existing_user.is_old_member = is_old_member
+          existing_user.has_paid = has_paid
+          existing_user.date_of_registration = date_of_registration
+
+          db.session.commit()
+          return jsonify({
+              "message": "Existing user updated successfully",
+              "user": user_schema.dump(existing_user)
+          }), 200
+      else:
+          return jsonify({"error": "Email already exists"}), 400
+      
   new_user = User(name, email, city, is_old_member,
                   has_paid, date_of_registration)
   db.session.add(new_user)

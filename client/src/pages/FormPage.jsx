@@ -23,23 +23,27 @@ function FormPage() {
     }
   
     try {
-      await axios.post("http://localhost:8080/user/", newUser)
-      setName('')
-      setEmail('')
-      setCity('')
-      setIsOldMember(false)
-      setHasPaid(false)
-      alert('New user added')
+      const response = await axios.post("http://localhost:8080/user/", newUser);
+      setName('');
+      setEmail('');
+      setCity('');
+      setIsOldMember(false);
+      setHasPaid(false);
+      alert(response.data.message);
     } catch (error) {
-      console.error(error)
+      if (error.response?.data?.error) {
+        alert(error.response.data.error);
+      } else {
+        alert('An unexpected error occurred.');
+      }
     }
-  }
+  };
 
   return (
     <div>
       <Navbar />
       
-      <form onSubmit={addUser}>
+      <form onSubmit={addUser} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px', margin: 'auto' }}>
         <input
           type="text"
           placeholder="Name"
@@ -69,7 +73,9 @@ function FormPage() {
             onChange={(e) => setIsOldMember(e.target.checked)}
           />
         </label>
-        <button type="submit">Add User</button>
+        <button type="submit" style={{ padding: '10px', backgroundColor: 'blue', color: 'white', border: 'none', cursor: 'pointer' }}>
+          {isOldMember ? 'Update User' : 'Add User'}
+        </button>
       </form>
     </div>
   )
