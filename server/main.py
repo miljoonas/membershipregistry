@@ -1,3 +1,7 @@
+import csv
+from io import StringIO
+from io import BytesIO
+from flask import send_file
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
@@ -159,7 +163,87 @@ def create_admin_account():
   else:
     print("Admin account already exists.")
 
+@app.route('/import_users', methods=['POST'])
+def import_users():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
 
+    try:
+        stream = StringIO(file.stream.read().decode("UTF8"))
+        csv_reader = csv.DictReader(stream)
+
+        for row in csv_reader:
+            name = row.get('name')
+            email = row.get('email')
+            city = row.get('city')
+            is_old_member = row.get('is_old_member', 'False').lower() == 'true'
+            has_paid = row.get('has_paid', 'False').lower() == 'true'
+            date_of_registration = row.get('date_of_registration')
+            password = row.get('password', None)
+
+            if not User.query.filter_by(email=email).first():
+                new_user = User(
+                    name=name,
+                    email=email,
+                    city=city,
+                    is_old_member=is_old_member,
+                    has_paid=has_paid,
+                    date_of_registration=date_of_registration,
+                    password=password
+                )
+                db.session.add(new_user)
+
+        db.session.commit()
+        return jsonify({"message": "Users imported successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/export_users', methods=['GET'])
+def export_users():
+    try:
+        users = User.query.all()
+
+        # Use StringIO for text processing
+        string_io = StringIO()
+        writer = csv.writer(string_io)
+
+        # Write CSV header
+        writer.writerow(['id', 'name', 'email', 'city', 'is_old_member', 'has_paid', 'date_of_registration', 'password'])
+
+        # Write data rows
+        for user in users:
+            writer.writerow([
+                user.id,
+                user.name,
+                user.email,
+                user.city,
+                user.is_old_member,
+                user.has_paid,
+                user.date_of_registration,
+                user.password or ''  # Avoid None values
+            ])
+
+        # Convert StringIO data to bytes
+        string_io.seek(0)
+        csv_data = string_io.getvalue().encode('utf-8')  # Encode as UTF-8
+        string_io.close()
+
+        # Use BytesIO to send the file as binary
+        return send_file(
+            BytesIO(csv_data),
+            mimetype="text/csv",
+            as_attachment=True,
+            download_name="users.csv"
+        )
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 # @app.route('/verify', methods=['POST'])
 # @jwt_required()
 # def verify():

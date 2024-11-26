@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar'
 function AdminPage() {
   const [users, setUsers] = useState([])
   const [searchQuery, setSearchQuery] = useState(''); // State for search query
+  const [file, setFile] = useState(null); // State for CSV file
 
   const fetchUsers = async () => {
     try {
@@ -35,6 +36,33 @@ function AdminPage() {
     }
   }
 
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleImport = async () => {
+    if (!file) {
+      alert('Please select a file first');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post('http://localhost:8080/import_users', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      alert(response.data.message || 'Import successful');
+      fetchUsers(); // Refresh user list after import
+    } catch (error) {
+      alert(error.response?.data?.error || 'Import failed');
+    }
+  };
+
+
   useEffect(() => {
     fetchUsers()
   }, [])
@@ -58,6 +86,28 @@ function AdminPage() {
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{ padding: '10px', width: '100%', border: '1px solid #ccc', borderRadius: '5px' }}
         />
+      </div>
+
+      {/* Import/Export Section */}
+      <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+        <h3>Import/Export Users</h3>
+
+        {/* Import CSV */}
+        <div>
+          <h4>Import Users from CSV</h4>
+          <input type="file" onChange={handleFileChange} />
+          <button onClick={handleImport} style={{ marginLeft: '10px', padding: '5px 10px' }}>
+            Import CSV
+          </button>
+        </div>
+
+        {/* Export CSV */}
+        <div style={{ marginTop: '20px' }}>
+          <h4>Export Users to CSV</h4>
+          <a href="http://localhost:8080/export_users" target="_blank" rel="noopener noreferrer">
+            <button style={{ padding: '5px 10px' }}>Export CSV</button>
+          </a>
+        </div>
       </div>
       
       <div>
